@@ -517,7 +517,9 @@ void rectanglePacking::findFeasiblePlacement(Rectangle *rect, QVector<Rectangle 
         }else{
                 // slucaj b)
                 processCaseB(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BA, &CB, BAnorm, CBnorm, &A, &B, &C, i);
+
                 // slucaj c)
+                newBorder = *border;
                 processCaseC(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BC, &AB, BCnorm, ABnorm, &A, &B, &C, i);
                 //processCaseD(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BA, &CB, BAnorm, CBnorm, &A, &B, &C, i);
                 //processCaseE(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BC, &AB, BCnorm, ABnorm, &A, &B, &C, i);
@@ -630,8 +632,9 @@ void rectanglePacking::processCaseB(QVector<QVector<QPointF> > *possibleBorders,
 
     if (intersectsCircle(resRect)){
         processCaseD(possibleBorders, possiblePositions, newBorder, resRect, L, W, BA, CB, BAnorm, CBnorm, A, B, C, i);
-        //return;
+        return;
     }else{
+        newBorder->removeAt(i+1);
         // u zavisnosti od polozaja tacaka A i C, moze se videti tacno koje tacke treba dodati u granicu
         if (C->x() < A->x()){
             if (C->y() < A->y()){
@@ -689,7 +692,7 @@ void rectanglePacking::processCaseC(QVector<QVector<QPointF> > *possibleBorders,
 
     if (intersectsCircle(resRect)){
         processCaseE(possibleBorders, possiblePositions, newBorder, resRect, L, W, BC, AB, BCnorm, ABnorm, A, B, C, i);
-        //return;
+        return;
     }
     newBorder->removeAt(i+1);
     // u zavisnosti od polozaja tacaka A i C, moze se videti tacno koje tacke treba dodati u granicu

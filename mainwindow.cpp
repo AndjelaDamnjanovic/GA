@@ -216,12 +216,16 @@ void MainWindow::on_tipAlgoritma_currentIndexChanged(int index)
         ui->datoteka_dugme->setEnabled(false);
         ui->Nasumicni_dugme->setEnabled(false);
         ui->naivniCheck->setEnabled(false);
+        ui->rButton->setEnabled(false);
+        ui->pbRect->setEnabled(false);
     }
     else
     {
         ui->datoteka_dugme->setEnabled(true);
         ui->Nasumicni_dugme->setEnabled(true);
         ui->merenjeButton->setEnabled(true);
+        ui->rButton->setEnabled(true);
+        ui->pbRect->setEnabled(true);
 
         /* DCEL ne podrzava rad sa nasumicnim tackama */
         if (tipAlgoritma == TipAlgoritma::DCEL_DEMO)
