@@ -36,8 +36,8 @@ public:
     QVector <Rectangle*> makeConfigC(Rectangle*, QVector <QVector <QPointF> >*) const;
     QVector <Rectangle*> makeConfigR(Rectangle*, QVector <QVector <QPointF> >*) const;
     QVector <Rectangle*> makeConfigT(Rectangle*, QVector <QVector <QPointF> >*) const;
-    QVector <Rectangle*> makeConfigRS(Rectangle*, Rectangle*, QVector <QVector <QPointF> >*) const;
-    QVector <Rectangle*> makeConfigRA(Rectangle*, Rectangle*, QVector <QVector <QPointF> >*) const;
+    QVector <Rectangle*> makeConfigRS(Rectangle*, Rectangle*, QVector <QVector <QPointF> >*, bool*) const;
+    QVector <Rectangle*> makeConfigRA(Rectangle*, Rectangle*, QVector <QVector <QPointF> >*, bool*) const;
     void findFeasiblePlacement(Rectangle *, QVector<Rectangle*> *, QVector<QPointF> *) const;
     bool intersectsCircle(Rectangle*) const;
     void processCaseA(QVector <QVector <QPointF>> *, QVector<Rectangle*>*, QVector<QPointF>*, Rectangle*, qreal, qreal, QPointF*, QPointF*, qreal, qreal, QPointF*, QPointF*, QPointF*, int) const;

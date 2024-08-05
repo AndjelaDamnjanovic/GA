@@ -208,18 +208,22 @@ QVector<QVector<Rectangle *> > rectanglePacking::makeInitialConfigs(QVector<Rect
     QVector<Rectangle*> config;
 
     if(rectangles.size() > 0){
-        //config = makeConfigC(rectangles.at(0), borders);
-        //configs.append(config);
-        //config = makeConfigR(rectangles.at(0), borders);
-        //configs.append(config);
-        //config = makeConfigT(rectangles.at(0), borders);
-        //configs.append(config);
+        config = makeConfigC(rectangles.at(0), borders);
+        configs.append(config);
+        config = makeConfigR(rectangles.at(0), borders);
+        configs.append(config);
+        config = makeConfigT(rectangles.at(0), borders);
+        configs.append(config);
     }
     if(rectangles.size() >= 2){
-        config = makeConfigRA(rectangles.at(0), rectangles.at(1), borders);
-        configs.append(config);
-        //config = makeConfigRS(rectangles.at(0), rectangles.at(1), borders);
-        //configs.append(config);
+        bool sveOK = false;
+        config = makeConfigRA(rectangles.at(0), rectangles.at(1), borders, &sveOK);
+        if(sveOK == true)
+            configs.append(config);
+        sveOK = false;
+        config = makeConfigRS(rectangles.at(0), rectangles.at(1), borders, &sveOK);
+        if(sveOK == true)
+            configs.append(config);
     }
     return configs;
 }
@@ -353,71 +357,66 @@ QVector <Rectangle*> rectanglePacking::makeConfigT(Rectangle* rect, QVector <QVe
 
     return config;
 };
-QVector <Rectangle*> rectanglePacking::makeConfigRS(Rectangle* fst, Rectangle* snd, QVector <QVector <QPointF> >* borders) const{
+QVector <Rectangle*> rectanglePacking::makeConfigRS(Rectangle* fst, Rectangle* snd, QVector <QVector <QPointF> >* borders, bool* ok) const{
     QVector <QVector <QPointF>>* borders2 = new QVector <QVector <QPointF>>;
     QVector <Rectangle*> config = makeConfigR(fst, borders2);
     //config.append(fst);
     QPointF center = _circleCenter;
     Rectangle* rect = config.at(0);
-    if(intersectsCircle(rect)){
-        //return config;
-    }
-    qreal x1, y1, x2, y2;
-    qreal x11, y11, x12, y12;
-    rect->getCoords(&x11, &y11, &x12, &y12);
+    if(!intersectsCircle(rect)){
+        qreal x1, y1, x2, y2;
+        qreal x11, y11, x12, y12;
+        rect->getCoords(&x11, &y11, &x12, &y12);
 
-    qreal L1 = fst->width();
-    qreal W1 = fst->height();
+        qreal L1 = fst->width();
+        qreal W1 = fst->height();
 
-    qreal L2 = snd->width();
-    qreal W2 = snd->height();
+        qreal L2 = snd->width();
+        qreal W2 = snd->height();
 
-    QPointF fstCenter = rect->center();
+        QPointF fstCenter = rect->center();
 
-    if(std::pow(_poluprecnik, 2) - std::pow(fstCenter.x() - L1/2 - L2,2) >= 0){
-        QPointF rectCenter = snd->center();
+        if(std::pow(_poluprecnik, 2) - std::pow(fstCenter.x() - L1/2 - L2,2) >= 0){
+            QPointF rectCenter = snd->center();
 
-        //QPoint rectCenter = QPoint(0,0);
-        QPointF rectCenterNew = QPointF(fstCenter.x() - L1/2 - L2/2,
+            //QPoint rectCenter = QPoint(0,0);
+            QPointF rectCenterNew = QPointF(fstCenter.x() - L1/2 - L2/2,
                                         std::sqrt(std::pow(_poluprecnik, 2) - std::pow(fstCenter.x() - L1/2 - L2, 2)) - W2/2);
 
 
-        qreal xDiff = rectCenterNew.x() - rectCenter.x();
-        qreal yDiff = rectCenterNew.y() - rectCenter.y();
+            qreal xDiff = rectCenterNew.x() - rectCenter.x();
+            qreal yDiff = rectCenterNew.y() - rectCenter.y();
 
-        snd->getCoords(&x1, &y1, &x2, &y2);
-        QPointF tl = QPointF(x1 + xDiff, y1 + yDiff);
-        QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
+            snd->getCoords(&x1, &y1, &x2, &y2);
+            QPointF tl = QPointF(x1 + xDiff, y1 + yDiff);
+            QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
 
-        Rectangle * resRect = new Rectangle(tl, br);
-        if(intersectsCircle(rect)){
-            //return config;
+            Rectangle * resRect = new Rectangle(tl, br);
+            if(!intersectsCircle(rect)){
+                // proveri da li staje u krug
+                //config.append(snd);
+                if(rectCenterNew.y() <= (W1 + W2)/2){
+                    config.append(resRect);
+                    QVector <QPointF> border;
+                    resRect->getCoords(&x1, &y1, &x2, &y2);
+                    //PROVERI DA SE TEMENA NE POKLAPAJU!!!!
+                    border.append(QPointF(x12, y11));
+                    border.append(QPointF(x11, y11));
+                    border.append(QPointF(x2, y1));
+                    border.append(QPointF(x1, y1));
+                    border.append(QPointF(x1, y2));
+                    border.append(QPointF(x2, y2));
+                    border.append(QPointF(x11, y12));
+                    border.append(QPointF(x12, y12));
+                    borders->append(border);
+                    *ok = true;
+                }
+            }
         }
-        // proveri da li staje u krug
-        //config.append(snd);
-        if(rectCenterNew.y() <= (W1 + W2)/2){
-            config.append(resRect);
-            QVector <QPointF> border;
-            resRect->getCoords(&x1, &y1, &x2, &y2);
-            //PROVERI DA SE TEMENA NE POKLAPAJU!!!!
-            border.append(QPointF(x12, y11));
-            border.append(QPointF(x11, y11));
-            border.append(QPointF(x2, y1));
-            border.append(QPointF(x1, y1));
-            border.append(QPointF(x1, y2));
-            border.append(QPointF(x2, y2));
-            border.append(QPointF(x11, y12));
-            border.append(QPointF(x12, y12));
-            borders->append(border);
-        }else{
-            //return config;
-        }
-    }else{
-       // return config;
     }
     return config;
 };
-QVector <Rectangle*> rectanglePacking::makeConfigRA(Rectangle* fst, Rectangle* snd, QVector <QVector <QPointF> >* borders) const{
+QVector<Rectangle*> rectanglePacking::makeConfigRA(Rectangle* fst, Rectangle* snd, QVector <QVector <QPointF> >* borders, bool* ok) const{
     QVector <Rectangle*> config;
     //config.append(&fst);
     QPointF center = _circleCenter;
@@ -445,42 +444,40 @@ QVector <Rectangle*> rectanglePacking::makeConfigRA(Rectangle* fst, Rectangle* s
         QPointF br = QPointF(x12 + xDiff, y12 + yDiff);
 
         Rectangle * resRect = new Rectangle(tl, br);
-        std::cout<<"RA konfig prvi pravougaonik: "<<std::to_string(fstCenter.x())<<" "<<std::to_string(fstCenter.y())<<std::endl;
-        if(intersectsCircle(resRect)){
-            //return config;
+
+        if(!intersectsCircle(resRect)){
+
+            resRect->getCoords(&x11, &y11, &x12, &y12);
+
+            config.append(resRect);
+
+            xDiff = sndCenter.x() - rectCenterSnd.x();
+            yDiff = sndCenter.y() - rectCenterSnd.y();
+
+            snd->getCoords(&x1, &y1, &x2, &y2);
+            tl = QPointF(x1 + xDiff, y1 + yDiff);
+            br = QPointF(x2 + xDiff, y2 + yDiff);
+
+            resRect = new Rectangle(tl, br);
+            if(!intersectsCircle(resRect)){
+
+                resRect->getCoords(&x1, &y1, &x2, &y2);
+
+            config.append(resRect);
+
+            QVector <QPointF> border;
+
+            border.append(QPointF(x12, y11));
+            border.append(QPointF(x2, y2));
+            border.append(QPointF(x2, y1));
+            border.append(QPointF(x1, y1));
+            border.append(QPointF(x11, y12));
+            border.append(QPointF(x12, y12));
+            borders->append(border);
+            *ok=false;
+            }
         }
-        resRect->getCoords(&x11, &y11, &x12, &y12);
-
-        config.append(resRect);
-
-        xDiff = sndCenter.x() - rectCenterSnd.x();
-        yDiff = sndCenter.y() - rectCenterSnd.y();
-
-        snd->getCoords(&x1, &y1, &x2, &y2);
-        tl = QPointF(x1 + xDiff, y1 + yDiff);
-        br = QPointF(x2 + xDiff, y2 + yDiff);
-
-        resRect = new Rectangle(tl, br);
-        if(intersectsCircle(resRect)){
-            //return config;
-        }
-
-        resRect->getCoords(&x1, &y1, &x2, &y2);
-
-        config.append(resRect);
-
-        QVector <QPointF> border;
-
-        border.append(QPointF(x12, y11));
-        border.append(QPointF(x2, y2));
-        border.append(QPointF(x2, y1));
-        border.append(QPointF(x1, y1));
-        border.append(QPointF(x11, y12));
-        border.append(QPointF(x12, y12));
-        borders->append(border);
-    }/*else{
-        return config;
-    }*/
+    }
     return config;
 }
 
@@ -523,6 +520,7 @@ void rectanglePacking::findFeasiblePlacement(Rectangle *rect, QVector<Rectangle 
                 // slucaj c)
                 processCaseC(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BC, &AB, BCnorm, ABnorm, &A, &B, &C, i);
                 //processCaseD(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BA, &CB, BAnorm, CBnorm, &A, &B, &C, i);
+                //processCaseE(&possibleBorders, &possiblePositions, &newBorder, rect, L, W, &BC, &AB, BCnorm, ABnorm, &A, &B, &C, i);
         }
     }
 
@@ -554,7 +552,6 @@ bool rectanglePacking::intersectsCircle(Rectangle * resRect) const
 
 void rectanglePacking::processCaseA(QVector<QVector<QPointF> > *possibleBorders, QVector<Rectangle *> *possiblePositions, QVector<QPointF> * newBorder, Rectangle* rect, qreal L, qreal W, QPointF *BA, QPointF *BC, qreal BAnorm, qreal BCnorm, QPointF* A, QPointF* B, QPointF* C, int i) const
 {
-    std::cout<<"U process A sam!"<<std::endl;
     QPointF centerNew;
     //Ako je AB horizontalna
     if ( A->y() == B->y() )
@@ -571,9 +568,7 @@ void rectanglePacking::processCaseA(QVector<QVector<QPointF> > *possibleBorders,
 
     QPointF tl = QPointF(x1 + xDiff, y1 + yDiff);
     QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
-
     Rectangle* resRect = new Rectangle(tl, br);
-    std::cout<<"Res rect u A:"<< std::to_string(resRect->center().x())<<" "<<std::to_string(resRect->center().y());
 
     if (intersectsCircle(resRect)){
         return;
@@ -615,7 +610,7 @@ void rectanglePacking::processCaseA(QVector<QVector<QPointF> > *possibleBorders,
 void rectanglePacking::processCaseB(QVector<QVector<QPointF> > *possibleBorders, QVector<Rectangle *> *possiblePositions, QVector<QPointF> * newBorder, Rectangle* rect, qreal L, qreal W, QPointF *BA, QPointF *CB, qreal BAnorm, qreal CBnorm, QPointF* A, QPointF* B, QPointF* C, int i) const
 {
     QPointF centerNew;
-    std::cout<<"U process B sam!"<<std::endl;
+
     //Ako je AB horizontalna
     if ( A->y() == B->y() )
         centerNew = QPointF(B->x() + (L/(2*BAnorm))* BA->x() + (W/(2*CBnorm))*CB->x(), B->y() + (L/(2*BAnorm))* BA->y() + (W/(2*CBnorm))*CB->y());
@@ -635,11 +630,9 @@ void rectanglePacking::processCaseB(QVector<QVector<QPointF> > *possibleBorders,
 
     if (intersectsCircle(resRect)){
         processCaseD(possibleBorders, possiblePositions, newBorder, resRect, L, W, BA, CB, BAnorm, CBnorm, A, B, C, i);
-        return;
+        //return;
     }else{
-        newBorder->removeAt(i+1);
         // u zavisnosti od polozaja tacaka A i C, moze se videti tacno koje tacke treba dodati u granicu
-
         if (C->x() < A->x()){
             if (C->y() < A->y()){
                     newBorder->insert(i+1, QPointF(tl.x(), br.y()));
@@ -670,12 +663,13 @@ void rectanglePacking::processCaseB(QVector<QVector<QPointF> > *possibleBorders,
             }
         }
     }
+    std::cout<<"Gotova B fja"<<std::endl;
 };
 
 void rectanglePacking::processCaseC(QVector<QVector<QPointF> > *possibleBorders, QVector<Rectangle *> *possiblePositions, QVector<QPointF> * newBorder, Rectangle* rect, qreal L, qreal W, QPointF *BC, QPointF *AB, qreal BCnorm, qreal ABnorm, QPointF* A, QPointF* B, QPointF* C, int i) const
 {
     QPointF centerNew;
-    std::cout<<"U process C sam!"<<std::endl;
+
     //Ako je AB horizontalna
     if ( A->y() == B->y() )
         centerNew = QPointF(B->x() + (W/(2*BCnorm))* BC->x() + (L/(2*ABnorm))*AB->x(), B->y() + (W/(2*BCnorm))* BC->y() + (L/(2*ABnorm))*AB->y());
@@ -692,11 +686,10 @@ void rectanglePacking::processCaseC(QVector<QVector<QPointF> > *possibleBorders,
     QPointF tl = QPointF(x1 + xDiff, y1 + yDiff);
     QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
     Rectangle* resRect = new Rectangle(tl, br);
-    std::cout<<"Res rect u C:"<< std::to_string(resRect->topLeft().x())<<" "<<std::to_string(resRect->topLeft().y());
 
     if (intersectsCircle(resRect)){
         processCaseE(possibleBorders, possiblePositions, newBorder, resRect, L, W, BC, AB, BCnorm, ABnorm, A, B, C, i);
-        return;
+        //return;
     }
     newBorder->removeAt(i+1);
     // u zavisnosti od polozaja tacaka A i C, moze se videti tacno koje tacke treba dodati u granicu
@@ -729,12 +722,12 @@ void rectanglePacking::processCaseC(QVector<QVector<QPointF> > *possibleBorders,
                 possiblePositions->append(resRect);
         }
     }
+    std::cout<<"Yavrsio sam sa C"<<std::endl;
 };
 
 void rectanglePacking::processCaseD(QVector<QVector<QPointF> > *possibleBorders, QVector<Rectangle *> *possiblePositions, QVector<QPointF> * newBorder, Rectangle* rect, qreal L, qreal W, QPointF *BA, QPointF *CB, qreal BAnorm, qreal CBnorm, QPointF* A, QPointF* B, QPointF* C, int i) const
 {
     qreal lambda;
-    std::cout<<"U process D sam!"<<std::endl;
     QPointF centerNew;
     //Ako je AB horizontalna
     if ( A->y() == B->y() ){
@@ -760,7 +753,6 @@ void rectanglePacking::processCaseD(QVector<QVector<QPointF> > *possibleBorders,
         QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
         Rectangle* resRect = new Rectangle(tl, br);
 
-        std::cout<<"Res rect u D:"<< std::to_string(resRect->center().x())<<" "<<std::to_string(resRect->center().y());
         if (intersectsCircle(resRect)){
                 return;
         }
@@ -938,7 +930,6 @@ QVector<Rectangle *> rectanglePacking::shiftOnScreen(QVector<Rectangle *> rectan
 
 void rectanglePacking::processCaseE(QVector<QVector<QPointF> > *possibleBorders, QVector<Rectangle *> *possiblePositions, QVector<QPointF> * newBorder, Rectangle* rect, qreal L, qreal W, QPointF *BC, QPointF *AB, qreal BCnorm, qreal ABnorm, QPointF* A, QPointF* B, QPointF* C, int i) const
 {
-    std::cout<<"U process E sam!"<<std::endl;
     qreal lambda;
 
     QPointF centerNew;
@@ -966,7 +957,6 @@ void rectanglePacking::processCaseE(QVector<QVector<QPointF> > *possibleBorders,
             QPointF br = QPointF(x2 + xDiff, y2 + yDiff);
             Rectangle* resRect = new Rectangle(tl, br);
 
-            std::cout<<"Res rect u E:"<< std::to_string(resRect->topLeft().x())<<" "<<std::to_string(resRect->topLeft().y());
             if (intersectsCircle(resRect)){
                 return;
             }
